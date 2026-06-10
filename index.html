@@ -836,7 +836,6 @@ renderModel();
 (function() {
   const CORRECT = 'Q1BTQDIwMjY=';
   function encode(s) { return btoa(unescape(encodeURIComponent(s))); }
-
   function checkPassword() {
     const val = document.getElementById('pwd-input').value;
     if (encode(val) === CORRECT) {
@@ -851,9 +850,7 @@ renderModel();
       setTimeout(() => inp.classList.remove('shake'), 400);
     }
   }
-
   window.checkPassword = checkPassword;
-
   document.addEventListener('DOMContentLoaded', function() {
     var inp = document.getElementById('pwd-input');
     if (inp) inp.addEventListener('keydown', function(e) {
