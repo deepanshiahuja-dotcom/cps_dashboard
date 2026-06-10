@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPS Supply Dashboard — __CURRENT_MONTH__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --ink:        #0f1117;
+  --ink-2:      #3d4257;
+  --ink-3:      #7b82a0;
+  --ink-4:      #b0b5cc;
+  --canvas:     #f6f7fb;
+  --surface:    #ffffff;
+  --line:       #e8eaf2;
+  --line-2:     #d4d7e8;
+
+  --signal-g:   #00875a;
+  --signal-g2:  #e3fcef;
+  --signal-g3:  #abf5d1;
+  --signal-a:   #974f0c;
+  --signal-a2:  #fff8ee;
+  --signal-a3:  #ffe0b2;
+  --signal-r:   #bf2600;
+  --signal-r2:  #ffebe6;
+  --signal-r3:  #ffbdad;
+
+  --accent:     #2154e8;
+  --accent-2:   #eef2fd;
+
+  --tvs:        #2563eb;
+  --bajaj:      #7c3aed;
+  --ktm:        #dc2626;
+  --triumph:    #059669;
+  --ather:      #0891b2;
+  --jawa:       #9333ea;
+  --ampere:     #0284c7;
+
+  --font-ui:   'Inter', system-ui, sans-serif;
+  --font-data: 'DM Mono', 'Fira Code', monospace;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(15,17,23,.06), 0 1px 2px rgba(15,17,23,.04);
+  --shadow-md: 0 4px 12px rgba(15,17,23,.08), 0 2px 4px rgba(15,17,23,.05);
+}
+
+/* ── RESET & BASE ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 13px; }
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────────────── */
+.page { max-width: 1440px; margin: 0 auto; padding: 0 28px 48px; }
+
+/* ── TOPBAR ─────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.topbar-logo {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.topbar-logo svg { width: 16px; height: 16px; fill: white; }
+.topbar-title { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: -.2px; }
+.topbar-sep { width: 1px; height: 20px; background: var(--line); }
+.topbar-month {
+  font-size: 12px; font-weight: 600;
+  color: var(--ink-2);
+  background: var(--accent-2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #c7d6fa;
+}
+.topbar-meta { font-size: 11px; color: var(--ink-3); margin-left: 2px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topbar-updated {
+  font-size: 11px; color: var(--ink-3);
+  display: flex; align-items: center; gap-5px;
+}
+.dot-live {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--signal-g);
+  display: inline-block; margin-right: 5px;
+  box-shadow: 0 0 0 2px var(--signal-g2);
+  animation: pulse 2.4s ease infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 2px var(--signal-g2); }
+  50%      { box-shadow: 0 0 0 4px var(--signal-g3); }
+}
+
+/* ── SCORECARD ROW ──────────────────────────────────────────────── */
+.scorecards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 24px 0 6px;
+}
+.sc {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.sc::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.sc-blue::before  { background: linear-gradient(90deg, #2154e8, #6284f5); }
+.sc-green::before { background: linear-gradient(90deg, var(--signal-g), #36b37e); }
+.sc-amber::before { background: linear-gradient(90deg, #e07000, #f59e0b); }
+.sc-red::before   { background: linear-gradient(90deg, var(--signal-r), #ff5630); }
+.sc-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--ink-3);
+}
+.sc-value {
+  font-size: 32px; font-weight: 700;
+  font-family: var(--font-data);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin: 8px 0 4px;
+}
+.sc-blue  .sc-value { color: var(--accent); }
+.sc-green .sc-value { color: var(--signal-g); }
+.sc-amber .sc-value { color: var(--signal-a); }
+.sc-red   .sc-value { color: var(--signal-r); }
+.sc-sub { font-size: 11px; color: var(--ink-3); }
+
+/* ── SECTION HEADER ─────────────────────────────────────────────── */
+.sec-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 28px 0 12px;
+}
+.sec-head h2 {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .9px;
+  color: var(--ink-3);
+}
+.sec-head-line { flex: 1; height: 1px; background: var(--line); }
+.sec-hint { font-size: 11px; color: var(--ink-4); font-style: italic; }
+
+/* ── TABLE SHARED ───────────────────────────────────────────────── */
+.tbl-wrap { overflow-x: auto; border-radius: var(--r-lg); box-shadow: var(--shadow-md); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+thead tr.grp th {
+  padding: 8px 14px 7px;
+  font-size: 9.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .7px;
+  text-align: center;
+  border-bottom: 1px solid var(--line-2);
+}
+thead tr.col th {
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px;
+  color: var(--ink-3);
+  background: #fafbff;
+  border-bottom: 2px solid var(--line-2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s;
+}
+thead tr.col th:hover { color: var(--ink); }
+thead tr.col th.sorted { color: var(--accent); }
+
+/* col group tints */
+.gh-id  { background: #fafbff !important; }
+.gh-dem { background: #f0f4ff !important; color: #1e40af; }
+.gh-sup { background: #edfaf3 !important; color: #065f46; }
+.gh-his { background: #fffbeb !important; color: #78350f; }
+.gh-cov { background: #faf5ff !important; color: #5b21b6; }
+
+tbody tr {
+  border-bottom: 1px solid var(--line);
+  transition: background .1s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f7f8fd; }
+tbody tr.is-exp { background: #f0f4ff; }
+tbody tr.is-exp:hover { background: #e8eeff; }
+tbody td { padding: 11px 14px; vertical-align: middle; }
+
+/* ── BRAND CELL ─────────────────────────────────────────────────── */
+.brand-cell { display: flex; align-items: center; gap: 10px; }
+.brand-swatch {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  letter-spacing: -.3px;
+  flex-shrink: 0;
+  color: white;
+}
+.brand-info { display: flex; flex-direction: column; gap: 1px; }
+.brand-name { font-weight: 700; font-size: 13px; line-height: 1.2; }
+.brand-count { font-size: 10px; color: var(--ink-3); }
+.chev {
+  margin-left: auto; color: var(--ink-4);
+  font-size: 9px; transition: transform .2s;
+}
+.is-exp .chev { transform: rotate(180deg); }
+
+/* brand swatch colors */
+.sw-tvs     { background: var(--tvs); }
+.sw-bajaj   { background: var(--bajaj); }
+.sw-ktm     { background: var(--ktm); }
+.sw-triumph { background: var(--triumph); }
+.sw-ather   { background: var(--ather); }
+.sw-jawa    { background: var(--jawa); }
+.sw-ampere  { background: var(--ampere); }
+
+/* ── MODEL CHIP ─────────────────────────────────────────────────── */
+.chip {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 4px; font-size: 9px; font-weight: 700;
+  text-transform: uppercase; white-space: nowrap; letter-spacing: .3px;
+}
+.ch-tvs     { background: #dbeafe; color: #1e40af; }
+.ch-bajaj   { background: #ede9fe; color: #5b21b6; }
+.ch-ktm     { background: #fee2e2; color: #991b1b; }
+.ch-triumph { background: #d1fae5; color: #065f46; }
+.ch-ather   { background: #cffafe; color: #164e63; }
+.ch-jawa    { background: #f3e8ff; color: #6b21a8; }
+.ch-ampere  { background: #e0f2fe; color: #075985; }
+
+/* ── DATA CELLS ─────────────────────────────────────────────────── */
+.num { font-family: var(--font-data); font-size: 12px; }
+.nd  { color: #1e40af; }
+.ns  { color: #065f46; }
+.nh  { color: #78350f; font-weight: 600; }
+.dim { color: var(--ink-4); }
+.model-name { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+
+/* ── COVERAGE BAR ───────────────────────────────────────────────── */
+.cov-cell { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+.cov-track {
+  flex: 1; height: 6px;
+  background: var(--line-2);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.cov-fill {
+  height: 100%; border-radius: 3px;
+  position: absolute; top: 0; left: 0;
+  transition: width .4s ease;
+}
+.fill-g { background: linear-gradient(90deg, #00875a, #36b37e); }
+.fill-a { background: linear-gradient(90deg, #e07000, #f59e0b); }
+.fill-r { background: linear-gradient(90deg, var(--signal-r), #ff5630); }
+.cov-pct {
+  font-family: var(--font-data);
+  font-size: 11.5px; font-weight: 600;
+  min-width: 46px; text-align: right;
+}
+.pct-g { color: var(--signal-g); }
+.pct-a { color: var(--signal-a); }
+.pct-r { color: var(--signal-r); }
+
+/* ── STATUS PILL ────────────────────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .3px;
+  white-space: nowrap;
+}
+.pill::before { content:''; width:5px; height:5px; border-radius:50%; }
+.p-over  { background: var(--signal-g2); color: var(--signal-g);  border: 1px solid var(--signal-g3); }
+.p-over::before  { background: var(--signal-g); }
+.p-on    { background: var(--accent-2);   color: var(--accent);   border: 1px solid #c7d6fa; }
+.p-on::before    { background: var(--accent); }
+.p-short { background: var(--signal-r2); color: var(--signal-r);  border: 1px solid var(--signal-r3); }
+.p-short::before { background: var(--signal-r); }
+
+/* ── EXPAND SUB-TABLE ───────────────────────────────────────────── */
+.exp-row { display: none; }
+.exp-row.open { display: table-row; }
+.exp-td { padding: 0 !important; border-bottom: 2px solid #d4d7ff !important; }
+.sub-shell {
+  padding: 0 0 0 60px;
+  background: #f7f8ff;
+  overflow-x: auto;
+}
+.sub-shell table {
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--line);
+  box-shadow: none;
+}
+.sub-shell thead tr.col th {
+  background: #f0f2fc;
+  font-size: 9px;
+  padding: 7px 14px;
+}
+.sub-shell tbody td { padding: 8px 14px; }
+
+/* ── CONTROLS ───────────────────────────────────────────────────── */
+.controls-bar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.ctrl-label { font-size: 11px; font-weight: 600; color: var(--ink-3); }
+.search-input {
+  padding: 6px 12px 6px 32px;
+  background: var(--canvas);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-size: 12px;
+  width: 210px;
+  outline: none;
+  font-family: var(--font-ui);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b0b5cc' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,84,232,.1); }
+.search-input::placeholder { color: var(--ink-4); }
+.filter-select {
+  padding: 6px 10px;
+  background: var(--canvas);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+}
+.filter-select:focus { border-color: var(--accent); }
+.ctrl-spacer { flex: 1; }
+.row-count {
+  font-size: 11px; color: var(--ink-3);
+  padding: 5px 12px;
+  background: var(--canvas);
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  font-family: var(--font-data);
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .page { padding: 0 12px 32px; }
+  .topbar { padding: 0 12px; }
+  .scorecards { grid-template-columns: repeat(2, 1fr); }
+}
+
+  /* ── PASSWORD SCREEN ─────────────────────────────────────────── */
+  #lock-screen {
+    position: fixed; inset: 0;
+    background: #f6f7fb;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .lock-card {
+    background: #fff;
+    border: 1px solid #e8eaf2;
+    border-radius: 16px;
+    padding: 40px 44px 36px;
+    width: 380px;
+    box-shadow: 0 8px 32px rgba(15,17,23,.10), 0 2px 8px rgba(15,17,23,.06);
+    text-align: center;
+  }
+  .lock-icon {
+    width: 48px; height: 48px;
+    background: #eef2fd;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .lock-icon svg { width: 24px; height: 24px; }
+  .lock-title {
+    font-size: 18px; font-weight: 700;
+    color: #0f1117; letter-spacing: -.3px;
+    margin-bottom: 4px;
+  }
+  .lock-subtitle {
+    font-size: 13px; color: #7b82a0;
+    margin-bottom: 28px; line-height: 1.5;
+  }
+  .lock-input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid #e8eaf2;
+    border-radius: 8px;
+    font-size: 14px; color: #0f1117;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .lock-input:focus {
+    border-color: #2154e8;
+    box-shadow: 0 0 0 3px rgba(33,84,232,.1);
+  }
+  .lock-input.shake {
+    animation: shake .3s ease;
+    border-color: #bf2600;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+  .lock-btn {
+    width: 100%; padding: 11px;
+    background: #2154e8; color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, transform .1s;
+    letter-spacing: .2px;
+  }
+  .lock-btn:hover  { background: #1a44c8; }
+  .lock-btn:active { transform: scale(.98); }
+  .lock-error {
+    font-size: 12px; color: #bf2600;
+    margin-top: 10px; min-height: 18px;
+    font-weight: 500;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2154e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <div class="lock-title">CPS Supply Tracker</div>
+    <div class="lock-subtitle">Enter your password to access<br>the dashboard</div>
+    <input
+      class="lock-input"
+      id="pwd-input"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+    <button class="lock-btn" onclick="checkPassword()">Unlock Dashboard</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="topbar-title">CPS Supply Tracker</span>
+  </div>
+  <div class="topbar-sep"></div>
+  <span class="topbar-month">__CURRENT_MONTH__</span>
+  <span class="topbar-meta">__TOPBAR_META__</span>
+  <div class="topbar-right">
+    <span class="topbar-updated">
+      <span class="dot-live"></span>
+      Data: __DATA_RANGE__
+    </span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- SCORECARDS -->
+  <div class="scorecards">
+    <div class="sc sc-blue">
+      <div class="sc-label">Total Daily Demand</div>
+      <div class="sc-value" id="kpi-demand">—</div>
+      <div class="sc-sub">leads / day target (÷26)</div>
+    </div>
+    <div class="sc sc-green">
+      <div class="sc-label">Current Supply / Day</div>
+      <div class="sc-value" id="kpi-supply">—</div>
+      <div class="sc-sub">__SUPPLY_DAYS__-day rolling average</div>
+    </div>
+    <div class="sc sc-amber">
+      <div class="sc-label">Historical Avg / Day</div>
+      <div class="sc-value" id="kpi-hist">—</div>
+      <div class="sc-sub">__HIS_SUBTITLE__</div>
+    </div>
+    <div class="sc sc-red" id="kpi-cov-card">
+      <div class="sc-label">Overall Coverage</div>
+      <div class="sc-value" id="kpi-cov">—</div>
+      <div class="sc-sub">Current supply vs historical</div>
+    </div>
+  </div>
+
+  <!-- BRAND TABLE -->
+  <div class="sec-head">
+    <h2>By Brand</h2>
+    <div class="sec-head-line"></div>
+    <span class="sec-hint">Click a brand to see model breakdown</span>
+  </div>
+  <div class="tbl-wrap">
+    <table id="brandTable">
+      <thead>
+        <tr class="grp">
+          <th class="gh-id"  colspan="2">Brand</th>
+          <th class="gh-dem" colspan="2">__DEM_LABEL__</th>
+          <th class="gh-sup" colspan="3">__SUP_LABEL__</th>
+          <th class="gh-his" colspan="3">__HIS_LABEL__</th>
+          <th class="gh-cov" colspan="2">Coverage</th>
+        </tr>
+        <tr class="col">
+          <th class="gh-id"  onclick="sB('brand')">Brand</th>
+          <th class="gh-id"  onclick="sB('monthly_demand')">Monthly</th>
+          <th class="gh-dem" onclick="sB('daily_demand')">Total / day</th>
+          <th class="gh-dem">Models</th>
+          <th class="gh-sup" onclick="sB('daily_supply')">Total / day</th>
+          <th class="gh-sup" onclick="sB('daily_supply_fb')">Facebook / day</th>
+          <th class="gh-sup" onclick="sB('daily_supply_google')">Google / day</th>
+          <th class="gh-his" onclick="sB('daily_hist')">Total / day</th>
+          <th class="gh-his" onclick="sB('daily_hist_fb')">Facebook / day</th>
+          <th class="gh-his" onclick="sB('daily_hist_google')">Google / day</th>
+          <th class="gh-cov" onclick="sB('pct_hist')" style="min-width:160px">Coverage %</th>
+          <th class="gh-cov">Status</th>
+        </tr>
+      </thead>
+      <tbody id="brandBody"></tbody>
+    </table>
+  </div>
+
+  <!-- MODEL TABLE -->
+  <div class="sec-head" style="margin-top:32px">
+    <h2>All Models</h2>
+    <div class="sec-head-line"></div>
+  </div>
+  <div class="controls-bar">
+    <span class="ctrl-label">Filter</span>
+    <input class="search-input" id="searchBox" type="text" placeholder="Search model...">
+    <select class="filter-select" id="brandFilter">
+      <option value="">All Brands</option>
+      <option value="TVS">TVS</option>
+      <option value="Bajaj">Bajaj</option>
+      <option value="KTM">KTM</option>
+      <option value="Triumph">Triumph</option>
+      <option value="Ather">Ather</option>
+      <option value="Jawa/Yezdi/BSA">Jawa / Yezdi / BSA</option>
+      <option value="Ampere">Ampere</option>
+    </select>
+    <select class="filter-select" id="statusFilter">
+      <option value="">All Status</option>
+      <option value="over">Over Delivery</option>
+      <option value="on">On Track</option>
+      <option value="short">Under Delivery</option>
+    </select>
+    <div class="ctrl-spacer"></div>
+    <span class="row-count" id="rowCount">50 models</span>
+  </div>
+  <div class="tbl-wrap">
+    <table id="modelTable">
+      <thead>
+        <tr class="grp">
+          <th class="gh-id"  colspan="2">Model</th>
+          <th class="gh-dem" colspan="2">__DEM_LABEL__</th>
+          <th class="gh-sup" colspan="3">__SUP_LABEL__</th>
+          <th class="gh-his" colspan="3">__HIS_LABEL__</th>
+          <th class="gh-cov" colspan="2">Coverage</th>
+        </tr>
+        <tr class="col">
+          <th class="gh-id"  onclick="sM('model')">Model</th>
+          <th class="gh-id"  onclick="sM('brand')">Brand</th>
+          <th class="gh-dem" onclick="sM('daily_demand')">Total / day</th>
+          <th class="gh-dem" onclick="sM('monthly_demand')">Monthly</th>
+          <th class="gh-sup" onclick="sM('daily_supply')">Total / day</th>
+          <th class="gh-sup" onclick="sM('daily_supply_fb')">Facebook / day</th>
+          <th class="gh-sup" onclick="sM('daily_supply_google')">Google / day</th>
+          <th class="gh-his" onclick="sM('daily_hist')">Total / day</th>
+          <th class="gh-his" onclick="sM('daily_hist_fb')">Facebook / day</th>
+          <th class="gh-his" onclick="sM('daily_hist_google')">Google / day</th>
+          <th class="gh-cov" onclick="sM('pct_hist')" style="min-width:160px">Coverage %</th>
+          <th class="gh-cov">Status</th>
+        </tr>
+      </thead>
+      <tbody id="modelBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const BD = __BRAND_JSON__;
+const MD = __MODEL_JSON__;
+
+const BRAND_COLORS = {
+  'TVS':'#2563eb','Bajaj':'#7c3aed','KTM':'#dc2626',
+  'Triumph':'#059669','Ather':'#0891b2','Jawa/Yezdi/BSA':'#9333ea','Ampere':'#0284c7'
+};
+const BRAND_SW = {
+  'TVS':'sw-tvs','Bajaj':'sw-bajaj','KTM':'sw-ktm',
+  'Triumph':'sw-triumph','Ather':'sw-ather','Jawa/Yezdi/BSA':'sw-jawa','Ampere':'sw-ampere'
+};
+const BRAND_ABBR = {
+  'TVS':'TVS','Bajaj':'BAJ','KTM':'KTM','Triumph':'TRI',
+  'Ather':'ATH','Jawa/Yezdi/BSA':'JWA','Ampere':'AMP'
+};
+const CHIP_CLS = {
+  'TVS':'ch-tvs','Bajaj':'ch-bajaj','KTM':'ch-ktm',
+  'Triumph':'ch-triumph','Ather':'ch-ather','Jawa/Yezdi/BSA':'ch-jawa','Ampere':'ch-ampere'
+};
+
+// ── KPI CARDS ───────────────────────────────────────────────────────
+const totDem  = MD.reduce((s,r)=>s+r.daily_demand, 0);
+const totSup  = MD.reduce((s,r)=>s+r.daily_supply, 0);
+const totHist = MD.reduce((s,r)=>s+r.daily_hist,   0);
+const covPct  = totHist > 0 ? (totSup/totHist*100).toFixed(1) : '—';
+
+document.getElementById('kpi-demand').textContent = Math.round(totDem).toLocaleString();
+document.getElementById('kpi-supply').textContent = Math.round(totSup).toLocaleString();
+document.getElementById('kpi-hist').textContent   = Math.round(totHist).toLocaleString();
+document.getElementById('kpi-cov').textContent    = covPct + '%';
+
+const covCard = document.getElementById('kpi-cov-card');
+const pctNum  = parseFloat(covPct);
+covCard.className = 'sc ' + (pctNum > 100 ? 'sc-green' : pctNum >= 90 ? 'sc-amber' : 'sc-red');
+
+// ── HELPERS ─────────────────────────────────────────────────────────
+function status(p) {
+  if (p > 100) return { c:'p-over',  t:'Over Delivery', f:'over'  };
+  if (p >= 90) return { c:'p-on',    t:'On Track',      f:'on'    };
+  return             { c:'p-short', t:'Under Delivery', f:'short' };
+}
+function N(v, cls) {
+  if (!v && v !== 0 || v === 0) return `<span class="dim">—</span>`;
+  return `<span class="num ${cls}">${(+v).toLocaleString()}</span>`;
+}
+function covBar(pct) {
+  const fill = pct > 100 ? 'fill-g' : pct >= 90 ? 'fill-a' : 'fill-r';
+  const pcls = pct > 100 ? 'pct-g'  : pct >= 90 ? 'pct-a'  : 'pct-r';
+  const w    = Math.min(pct, 100);
+  return `<div class="cov-cell">
+    <div class="cov-track"><div class="cov-fill ${fill}" style="width:${w}%"></div></div>
+    <span class="cov-pct ${pcls}">${pct}%</span>
+  </div>`;
+}
+
+// ── BRAND TABLE ──────────────────────────────────────────────────────
+let bCol='monthly_demand', bDir=-1, expanded=null;
+
+function renderBrand() {
+  const rows = [...BD].sort((a,b) => {
+    const av=a[bCol], bv=b[bCol];
+    return typeof av==='string' ? bDir*av.localeCompare(bv) : bDir*(av-bv);
+  });
+  const tb = document.getElementById('brandBody');
+  tb.innerHTML = '';
+  rows.forEach(r => {
+    const s   = status(r.pct_hist);
+    const isE = expanded === r.brand;
+    const sw  = BRAND_SW[r.brand] || '';
+    const ab  = BRAND_ABBR[r.brand] || r.brand.slice(0,3).toUpperCase();
+
+    const tr = document.createElement('tr');
+    if (isE) tr.className = 'is-exp';
+    tr.innerHTML = `
+      <td>
+        <div class="brand-cell">
+          <div class="brand-swatch ${sw}">${ab}</div>
+          <div class="brand-info">
+            <span class="brand-name">${r.brand}</span>
+            <span class="brand-count">${r.model_count} models</span>
+          </div>
+          <span class="chev">▼</span>
+        </div>
+      </td>
+      <td>${N(r.monthly_demand,'nd')}</td>
+      <td>${N(r.daily_demand,'nd')}</td>
+      <td><span class="dim" style="font-size:11px">${r.model_count} models</span></td>
+      <td>${N(r.daily_supply,'ns')}</td>
+      <td>${N(r.daily_supply_fb,'ns')}</td>
+      <td>${N(r.daily_supply_google,'ns')}</td>
+      <td><strong>${N(r.daily_hist,'nh')}</strong></td>
+      <td>${N(r.daily_hist_fb,'nh')}</td>
+      <td>${N(r.daily_hist_google,'nh')}</td>
+      <td>${covBar(r.pct_hist)}</td>
+      <td><span class="pill ${s.c}">${s.t}</span></td>`;
+    tr.onclick = () => { expanded = expanded===r.brand ? null : r.brand; renderBrand(); };
+    tb.appendChild(tr);
+
+    // sub-table
+    const mods = MD.filter(m=>m.brand===r.brand).sort((a,b)=>b.monthly_demand-a.monthly_demand);
+    const subRows = mods.map(m => {
+      const ms = status(m.pct_hist);
+      return `<tr>
+        <td><span class="model-name">${m.model}</span></td>
+        <td>${N(m.monthly_demand,'nd')}</td>
+        <td>${N(m.daily_demand,'nd')}</td>
+        <td></td>
+        <td>${N(m.daily_supply,'ns')}</td>
+        <td>${N(m.daily_supply_fb,'ns')}</td>
+        <td>${N(m.daily_supply_google,'ns')}</td>
+        <td><strong>${N(m.daily_hist,'nh')}</strong></td>
+        <td>${N(m.daily_hist_fb,'nh')}</td>
+        <td>${N(m.daily_hist_google,'nh')}</td>
+        <td>${covBar(m.pct_hist)}</td>
+        <td><span class="pill ${ms.c}">${ms.t}</span></td>
+      </tr>`;
+    }).join('');
+
+    const et = document.createElement('tr');
+    et.className = 'exp-row' + (isE ? ' open' : '');
+    et.innerHTML = `<td class="exp-td" colspan="12">
+      <div class="sub-shell">
+        <table>
+          <thead>
+            <tr class="col">
+              <th class="gh-id" style="min-width:220px">Model</th>
+              <th class="gh-dem">Monthly</th><th class="gh-dem">Total/day</th><th class="gh-dem"></th>
+              <th class="gh-sup">Total/day</th><th class="gh-sup">FB/day</th><th class="gh-sup">Google/day</th>
+              <th class="gh-his">Total/day</th><th class="gh-his">FB/day</th><th class="gh-his">Google/day</th>
+              <th class="gh-cov" style="min-width:160px">Coverage %</th><th class="gh-cov">Status</th>
+            </tr>
+          </thead>
+          <tbody>${subRows}</tbody>
+        </table>
+      </div>
+    </td>`;
+    tb.appendChild(et);
+  });
+}
+
+function sB(col) {
+  if (bCol===col) bDir*=-1; else { bCol=col; bDir=col==='brand'?1:-1; }
+  renderBrand();
+}
+
+// ── MODEL TABLE ───────────────────────────────────────────────────────
+let mCol='daily_hist', mDir=-1, mBrand='', mStatus='', mSearch='';
+
+function renderModel() {
+  let rows = [...MD];
+  if (mSearch) { const q=mSearch.toLowerCase(); rows=rows.filter(r=>r.model.toLowerCase().includes(q)||r.brand.toLowerCase().includes(q)); }
+  if (mBrand)  rows = rows.filter(r=>r.brand===mBrand);
+  if (mStatus) rows = rows.filter(r=>status(r.pct_hist).f===mStatus);
+  rows.sort((a,b)=>{ const av=a[mCol],bv=b[mCol]; return typeof av==='string'?mDir*av.localeCompare(bv):mDir*(av-bv); });
+
+  document.getElementById('rowCount').textContent = rows.length + ' model' + (rows.length!==1?'s':'');
+  document.getElementById('modelBody').innerHTML = rows.map(r => {
+    const s  = status(r.pct_hist);
+    const cc = CHIP_CLS[r.brand] || '';
+    const bs = r.brand==='Jawa/Yezdi/BSA' ? 'Jawa' : r.brand;
+    return `<tr>
+      <td><span class="model-name">${r.model}</span></td>
+      <td><span class="chip ${cc}">${bs}</span></td>
+      <td style="background:#fafbff">${N(r.daily_demand,'nd')}</td>
+      <td style="background:#fafbff">${N(r.monthly_demand,'nd')}</td>
+      <td style="background:#f7fdf9">${N(r.daily_supply,'ns')}</td>
+      <td style="background:#f7fdf9">${N(r.daily_supply_fb,'ns')}</td>
+      <td style="background:#f7fdf9">${N(r.daily_supply_google,'ns')}</td>
+      <td style="background:#fffdf0"><strong>${N(r.daily_hist,'nh')}</strong></td>
+      <td style="background:#fffdf0">${N(r.daily_hist_fb,'nh')}</td>
+      <td style="background:#fffdf0">${N(r.daily_hist_google,'nh')}</td>
+      <td style="background:#fdfaff">${covBar(r.pct_hist)}</td>
+      <td style="background:#fdfaff"><span class="pill ${s.c}">${s.t}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function sM(col) {
+  if (mCol===col) mDir*=-1; else { mCol=col; mDir=col==='model'||col==='brand'?1:-1; }
+  renderModel();
+}
+
+document.getElementById('searchBox').addEventListener('input', e=>{ mSearch=e.target.value; renderModel(); });
+document.getElementById('brandFilter').addEventListener('change', e=>{ mBrand=e.target.value; renderModel(); });
+document.getElementById('statusFilter').addEventListener('change', e=>{ mStatus=e.target.value; renderModel(); });
+
+renderBrand();
+renderModel();
+
+// ── PASSWORD GATE ────────────────────────────────────────────────
+(function() {
+  const CORRECT = 'Q1BTQDIwMjY=';
+  function encode(s) { return btoa(unescape(encodeURIComponent(s))); }
+  function checkPassword() {
+    const val = document.getElementById('pwd-input').value;
+    if (encode(val) === CORRECT) {
+      document.getElementById('lock-screen').style.display = 'none';
+      sessionStorage.setItem('cps_auth', CORRECT);
+    } else {
+      const inp = document.getElementById('pwd-input');
+      const err = document.getElementById('lock-error');
+      inp.classList.add('shake');
+      err.textContent = 'Incorrect password — try again';
+      inp.value = '';
+      setTimeout(() => inp.classList.remove('shake'), 400);
+    }
+  }
+  window.checkPassword = checkPassword;
+  document.addEventListener('DOMContentLoaded', function() {
+    var inp = document.getElementById('pwd-input');
+    if (inp) inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkPassword();
+    });
+    if (sessionStorage.getItem('cps_auth') === CORRECT) {
+      document.getElementById('lock-screen').style.display = 'none';
+    }
+  });
+})();
+</script>
+</body>
+</html>
